@@ -1,20 +1,24 @@
 class YUI::AutoComplete < YUI::Widget
-  def transition_map
-    { :auto_complete => [:load],
-      :load => [:load],
-    }
+  
+  transition :from  => :display, :to => :load
+  transition :in    => :load
+  
+  def query_string
+    param(:query)
   end
   
-  def auto_complete
+  def matches=(items)
+    @matches = items
+    
+    invoke!(:load)
+  end
+  
+  def display
     ### TODO: add configuration process here.
   end
   
   def load
-    query_for(param(:query)).collect{|k,v| "#{k}\t#{v}"}.join("\n")
+    @matches.collect{|k,v| "#{k}\t#{v}"}.join("\n")
   end
   
-  def query_for(query)
-    # override for retrieving match data.
-    {}
-  end
 end
