@@ -49,6 +49,13 @@ YAHOO.example.DynamicData = function() {
         return oPayload;
     }
     
+    
+    myDataTable.subscribe("cellClickEvent", function(evt) {
+    <%= remote_function(:url => address_to_event(:type => :cellClick), :with => "'record_id='+this.getRecord(evt.target)._oData.id"
+ ) %>    
+    });
+    
+    
     return {
         ds: myDataSource,
         dt: myDataTable
@@ -56,4 +63,3 @@ YAHOO.example.DynamicData = function() {
         
 }();
 </script>
-

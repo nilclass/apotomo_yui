@@ -1,27 +1,25 @@
 class YUI::DataTable < YUI::Widget
   
   attr_accessor :columns
-  attr_accessor :set
   
-  def transition_map
-    { :data_table => [:load],
-      :load => [:load],
-    }
-  end
+  attr_reader :start_index, :records_per_page, :sort_by, :sort_dir
+  
+  attr_accessor :total_records
+  
+  
+  transition :from => :display, :to => :load  # browser event.
+  transition :from => :load,    :to => :update #, :and => :back ### TODO: implement me.
+  transition :from => :update,  :to => :load
   
   # State method called when DataTable is created.
-  def data_table
+  def display
     ### TODO: add configuration process here.
     @columns  = []
-    @set      = []
-    @items_per_page = 2
+    @records_per_page = 10
+    
+    yield self if block_given?
     
     nil
-  end
-  
-  # Define columns in block.
-  def define(&block)
-    yield block self
   end
   
   def add_column(field) ### TODO: add explicit args label, sortable, ...!
@@ -32,31 +30,43 @@ class YUI::DataTable < YUI::Widget
   # data via AJAX.
   def load
     ### TODO: validation, of course.
-    start   = param(:startIndex).to_i
-    puts "start: #{start.inspect}"
-    results = param(:results).to_i
-    puts "amount: #{results.inspect}"
-    sort    = param(:sort).to_sym ### TODO: what if keys are not syms?
-    dir     = param(:dir).to_sym
     
-    result_set = query_for(start, results, sort, dir)
-    { :recordsReturned  => results,
-      :totalRecords     => total_records,
-      :startIndex       => start,
-      :sort             => sort,
-      :dir              => dir,
-    #"pageSize":10,
-      :records          => result_set
+    @start_index      = param(:startIndex)
+    @records_per_page = param(:results)
+    @sort_by          = param(:sort)
+    @sort_dir         = param(:dir)
+    
+    trigger :dataTableLoad
+    ""
+  end
+  
+  # Sends +table+ as new grid content to the connected DataTable widget in the browser.
+  # Data structure is an array of hashes, whereas each hash maps column names to cell values.
+  # 
+  # Note that this method must be called during a <tt>:dataTableLoad</tt> event cycle, e.g. in a
+  # a #respond_to_event callback in a controller.
+  #
+  # Example for +table+:
+  #  [{:name => "Nick Sutterer",  :country => "Germany"},
+  #   {:name => "Mike Pence",     :country => "US and A"}]
+  def grid=(table)
+    @grid = table
+    invoke! :update
+  end
+  
+  # Returns the new grid page content as JSON.
+  def update
+    result_set = @grid
+        
+    {:ResultSet =>
+      { 
+        #:totalResultsReturned => result_set.size,
+        #:firstResultPosition  => 1,#start,
+        #:sortedBy             => sort,
+        #:dir              => dir,
+        :Result               => result_set
+      },
+      "totalRecords"          => total_records, 
     }.to_json
-  end
-  
-  # Override for retrieving match data.
-  def query_for(start, amount, order, dir)
-    set.slice(start, amount).order(order, dir)
-  end
-  
-  # Calculate total amount of records.
-  def total_records
-    set.size
   end
 end
