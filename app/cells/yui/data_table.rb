@@ -11,7 +11,12 @@ class YUI::DataTable < YUI::Widget
   transition :from => :load,    :to => :update #, :and => :back ### TODO: implement me.
   transition :from => :update,  :to => :load
   
-  # State method called when DataTable is created.
+  # State method called when DataTable is created. The block from #render_widget is yield (?)
+  # here, so use #render_widget to define the columns.
+  # 
+  # Example:
+  #  render_widget('my_grid') do |w|
+  #    w.add_column 
   def display
     ### TODO: add configuration process here.
     @columns  = []
@@ -40,10 +45,10 @@ class YUI::DataTable < YUI::Widget
     ""
   end
   
-  # Sends +table+ as new grid content to the connected DataTable widget in the browser.
+  # Sends +table+ as new grid content to the connected DataTable control in the browser.
   # Data structure is an array of hashes, whereas each hash maps column names to cell values.
   # 
-  # Note that this method must be called during a <tt>:dataTableLoad</tt> event cycle, e.g. in a
+  # Note that this method must be called during a <tt>:dataTableLoad</tt> event cycle, e.g. in
   # a #respond_to_event callback in a controller.
   #
   # Example for +table+:

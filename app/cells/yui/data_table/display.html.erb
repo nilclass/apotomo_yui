@@ -1,0 +1,65 @@
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0//build/fonts/fonts-min.css" />
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/datatable/assets/skins/sam/datatable.css" />
+
+<%= javascript_include_tag "http://yui.yahooapis.com/2.7.0/build/yahoo-dom-event/yahoo-dom-event.js" %>
+<%= javascript_include_tag "http://yui.yahooapis.com/2.7.0/build/connection/connection-min.js" %>
+<%= javascript_include_tag "http://yui.yahooapis.com/2.7.0/build/datasource/datasource-min.js" %>
+
+<%= javascript_include_tag "http://yui.yahooapis.com/2.7.0/build/json/json-min.js" %>
+<%= javascript_include_tag "http://yui.yahooapis.com/2.7.0/build/element/element-min.js" %>
+<%= javascript_include_tag "http://yui.yahooapis.com/2.7.0/build/datatable/datatable-min.js" %>
+<%= javascript_include_tag "http://yui.yahooapis.com/2.7.0/build/paginator/paginator-min.js" %>
+
+<div  class=" yui-skin-sam">
+
+<div id="dynamicdata"></div> 
+
+
+</div>
+
+<script type="text/javascript">
+YAHOO.example.DynamicData = function() {
+    // Column definitions
+    var myColumnDefs = <%= @columns.to_json %>;
+    
+    // DataSource instance
+    var myDataSource = new YAHOO.util.DataSource("<%= url_for(address_to_event({:state => :load, :escape => false}, :data)) %>&");
+    myDataSource.responseType = YAHOO.util.DataSource.TYPE_JSON;
+    myDataSource.responseSchema = {
+        resultsList: "ResultSet.Result",
+        fields: <%= @columns.collect{|c| {:key => c[:key]} }.to_json %>,
+        metaFields: {
+            totalRecords: "totalRecords"
+        }
+    };
+    
+    // DataTable configuration
+    var myConfigs = {
+        initialRequest: "sort=id&dir=asc&startIndex=0&results=<%= @records_per_page %>", // Initial request for first page of data
+        dynamicData: true, // Enables dynamic server-driven data
+        //sortedBy : {key:"col1", dir:YAHOO.widget.DataTable.CLASS_ASC}, // Sets UI initial sort arrow
+        paginator: new YAHOO.widget.Paginator({ rowsPerPage:<%= @records_per_page %> }) // Enables pagination 
+    };
+    
+    // DataTable instance
+    var myDataTable = new YAHOO.widget.DataTable("dynamicdata", myColumnDefs, myDataSource, myConfigs);
+    // Update totalRecords on the fly with value from server
+    myDataTable.handleDataReturnPayload = function(oRequest, oResponse, oPayload) {
+        oPayload.totalRecords = oResponse.meta.totalRecords;
+        return oPayload;
+    }
+    
+    
+    myDataTable.subscribe("cellClickEvent", function(evt) {
+    <%= remote_function(:url => address_to_event(:type => :cellClick), :with => "'record_id='+this.getRecord(evt.target)._oData.id"
+ ) %>    
+    });
+    
+    
+    return {
+        ds: myDataSource,
+        dt: myDataTable
+    };
+        
+}();
+</script>

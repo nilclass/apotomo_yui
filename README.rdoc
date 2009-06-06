@@ -1,0 +1,61 @@
+= Finally... YUI widgets for Rails!
+Apotomo provides YUI widgets for your rails project. You neither need to write any line of JS nor handle any incoming JS events. Apotomo maps YUI controls to native Ruby widgets- you as the rails programmer can master your interactive JS widgets in your controller. 
+
+= A note about the state of code
+
+Please don't ask me why I didn't implement YUI widget XY yet, or why the JavaScript code sucks.
+
+There's simply not enough time for me to handle all those tasks, and my JS skills are less 
+than good. My job is maintaining the Apotomo project, designing the framework and to provide examples for you guys, so YOU can write great new widgets which can be bundled and distributed.
+
+Just fork and commit- every successful merge will be rewarded with beer.
+
+As first step, look at the respective widget's +:display+ state method and the +display.html.erb+ view. They map JS events to Apotomo events.
+Next, study the responder methods which mostly send some JSON data monster back to the browser
+control.
+
+== AutoComplete
+Embedding an auto-complete control is nothing more than defining the widget and writing the responding method that will send the matching strings to the form control.
+
+  class MyController < ApplicationController
+  
+    def my_beautiful_autocomplete_form
+      use_widget        yui_autocomplete('my_autocmpl')
+      respond_to_event  :autocompleteQuery, :with => :load_autocomplete
+    
+      @ac = render_widget('my_autocmpl')
+    end
+    
+    def load_autocomplete(evt)
+      auto_box  = evt.source
+      
+      query     = auto_box.query_string
+      matches   = Todo.find(:all, :conditions => ["text LIKE ?", query+'%'])  # thanks, agib!
+      auto_box.matches = matches.collect{|i| i.text}
+    end
+  end
+ 
+ 
+== DataTable
+Using the YUI DataTable control is as easy as embedding an AutoComplete.
+
+  class MyController < ApplicationController
+    
+    def basic
+      use_widget        yui_data_table('todo_grid')
+      respond_to_event  :dataTableLoad, :with => :query_data_table
+      
+      # configure the data_table before rendering it:
+      @grid = render_widget('todo_grid') do |grid|
+        grid.add_column "col1"
+      end
+  end
+  
+  
+  def query_data_table(evt)
+    data_table = evt.source
+    
+    data_table.total_records = Todo.count
+    data_table.grid = Todo.find(:all, :limit => 10, :offset => data_table.start_index).collect do |t| {:col1 => t.text } end
+  end
+end
