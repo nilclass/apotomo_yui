@@ -49,13 +49,15 @@ Using the YUI DataTable control is as easy as embedding an AutoComplete.
       @grid = render_widget('todo_grid') do |grid|
         grid.add_column "col1"
       end
-  end
+    end
   
   
-  def query_data_table(evt)
-    data_table = evt.source
-    
-    data_table.total_records = Todo.count
-    data_table.grid = Todo.find(:all, :limit => 10, :offset => data_table.start_index).collect do |t| {:col1 => t.text } end
+    def query_data_table(evt)
+      data_table = evt.source
+      
+      data_table.total_records = Todo.count
+      data_table.grid = Todo.find(:all, :limit => 10, :offset => data_table.start_index).collect do |t| 
+        {:col1 => t.text }
+      end
+    end
   end
-end
