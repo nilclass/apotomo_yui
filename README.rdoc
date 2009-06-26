@@ -56,8 +56,30 @@ Using the YUI DataTable control is as easy as embedding an AutoComplete.
       data_table = evt.source
       
       data_table.total_records = Todo.count
+      data_table.grid = Todo.find(:all, :limit => 10, :offset => data_table.start_index).collect do |t| {:col1 => t.text } end
+    end
+  end
+
+
+= Configuration
+
+== Setting the YUI <tt>build/</tt> URL
+In some occasions you might want to switch from using Yahoo's online server library to your local YUI installation - especially when you're offline.
+You can provide any local build installation using <tt>YUI::Configuration.build_url=</tt> in your <tt>config/environment.rb</tt> file.
+
+Example:
+
+  Rails::Initializer.run do |config|
+    ...
+  end
+
+  YUI::Configuration.build_url = "/javascripts/build/"
+
+This would instruct the Apotomo widgets to load their JavaScript files from your local Rails app, assuming you copied the YUI <tt>build/</tt> directory to your app's <tt>public/javascripts/</tt> directory.
+=======
       data_table.grid = Todo.find(:all, :limit => 10, :offset => data_table.start_index).collect do |t| 
         {:col1 => t.text }
       end
     end
   end
+>>>>>>> 36bb45fe518c44c092ab4135cedb1e6cf2a68ced:README.rdoc
