@@ -1,74 +1,49 @@
-<%= javascript_include_tag YUI::Configuration.build_url + "/yuiloader/yuiloader.js" %>
+<% yui('datatable') do -%>
+  YAHOO.example.DynamicData = function() {
 
-<script type="text/javascript">
-  var loader = new YAHOO.util.YUILoader({ 
-	  require: ['datatable'], // what components? 
-	  base: '<%= YUI::Configuration.build_url %>',//where do they live? 
-    loadOptional: true, //load all optional dependencies? 
-	  
-    onSuccess: function () {
-	 
-	    
-	    // Apotomo code: ---------------------------------------------------------
-	    // TODO: move creating to separate class (e.g. Apotomo.DataTable).
-	    
-	    YAHOO.example.DynamicData = function() {
-        // Column definitions
-        var myColumnDefs = <%= @columns.to_json %>;
-        
-        // DataSource instance
-        var myDataSource = new YAHOO.util.DataSource("<%= url_for(address_to_event({:state => :load, :escape => false}, :data)) %>&");
-        myDataSource.responseType = YAHOO.util.DataSource.TYPE_JSON;
-        myDataSource.responseSchema = {
-            resultsList: "ResultSet.Result",
-            fields: <%= @columns.collect{|c| {:key => c[:key]} }.to_json %>,
-            metaFields: {
-                totalRecords: "totalRecords"
-            }
-        };
-        
-        // DataTable configuration
-        var myConfigs = {
-            initialRequest: "sort=id&dir=asc&startIndex=0&results=<%= @records_per_page %>", // Initial request for first page of data
-            dynamicData: true, // Enables dynamic server-driven data
-            //sortedBy : {key:"col1", dir:YAHOO.widget.DataTable.CLASS_ASC}, // Sets UI initial sort arrow
-            paginator: new YAHOO.widget.Paginator({ rowsPerPage:<%= @records_per_page %> }) // Enables pagination 
-        };
-        
-        // DataTable instance
-        var myDataTable = new YAHOO.widget.DataTable("dynamicdata", myColumnDefs, myDataSource, myConfigs);
-        // Update totalRecords on the fly with value from server
-        myDataTable.handleDataReturnPayload = function(oRequest, oResponse, oPayload) {
-            oPayload.totalRecords = oResponse.meta.totalRecords;
-            return oPayload;
-        }
-        
-        
-        myDataTable.subscribe("cellClickEvent", function(evt) {
-        //console.debug(evt);
-        //console.debug(evt.target.cellIndex);
-        <%= remote_function(:url => address_to_event(:type => :cellClick), :with => "'record_id='+this.getRecord(evt.target).getData('id')"
-    ) %>    
-        });
-        
-        
-        return {
-            ds: myDataSource,
-            dt: myDataTable
-        };
-      }();
-      // Apotomo code ----------------------------------------------------------
-	 
-	 
-	 }
+    // Column definitions
+    var myColumnDefs = <%= @columns.to_json %>;
 
-	     }); 
+    // DataSource instance
+    var myDataSource = new YAHOO.util.DataSource("<%= url_for(address_to_event({ :state => :load, :escape => false }, :data)) %>&");
+    myDataSource.responseType = YAHOO.util.DataSource.TYPE_JSON;
+    myDataSource.responseSchema = {
+      resultsList: "ResultSet.Result",
+      fields: <%= @columns.collect {|c| { :key => c[:key] } }.to_json %>,
+      maxFields: {
+        totalRecord: "totalRecords"
+      }
+    };
 
-  loader.insert();
-</script>
+    // DataTable configuration
+    var myConfigs = {
+      initialRequest: "sort=id&dir=asc&startIndex=0&results=<%= @records_per_page %>", // Initial request for the first page of data
+      dynamicData: true, // Enables dynamic server-driven data
+      //sortedBy: { key: 'col1', dir: YAHOO.widget.DataTable.CLASS_ASC }, // Sets UI initial sort arrow
+      paginator: new YAHOO.widget.Paginator({ rowsPerPage: <%= @records_per_page %> }) // Enables pagination
+    };
 
+    // DataTable instance
+    var myDataTable = new YAHOO.widget.DataTable("dynamicdata", myColumnDefs, myDataSource, myConfigs);
+    // Update totalRecords on the fly with value from server
+    myDataTable.handleDataReturnPayload = function(oRequest, oResponse, oPayload) {
+      oPayload.totalRecords = oResponse.meta.totalRecords;
+      return oPayload;
+    };
 
-<div  class=" yui-skin-sam">
+    myDataTable.subscribe("cellClickEvent", function(evt) {
+      //console.debug(evt);
+      //console.debug(evt.target.cellIndex);
+      <%= remote_function(:url => address_to_event(:type => :cellClick), :with => "'record_id='+this.getRecord(evt.target).getData('id')") %>
+    });
 
-<div id="dynamicdata"></div> 
+    return {
+      ds: myDataSource,
+      dt: myDataTable
+    };
+  }();
+<% end -%>
+
+<div class=" yui-skin-sam">
+  <div id="dynamicdata"></div>
 </div>
