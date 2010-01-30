@@ -23,8 +23,8 @@ module YUI::Helper
   #
   def yui(*libs, &block)
     output = ''
-    output << javascript_include_tag(YUI::Configuration.build_url + '/yuiloader/yuiloader.js') unless @controller.instance_variable_get("@yui_loader_included")
-    @controller.instance_variable_set("@yui_loader_included", true)
+    output << javascript_include_tag(YUI::Configuration.build_url + '/yuiloader/yuiloader.js') unless @yui_loader_included
+    @yui_loader_included = true
     options = (libs.last.kind_of?(Hash) ? libs.pop : { })
     js = ''
     if block.arity > 0 # used in ruby code
@@ -58,7 +58,7 @@ module YUI::Helper
   # `element' is the DOM ID of the element to be used as the panels content.
   # valid options are described in http://developer.yahoo.com/yui/docs/YAHOO.widget.Panel.html
   def yui_panel(element, options)
-    yui 'panel' do |js|
+    yui 'container' do |js|
       js << %Q[var panel = new YAHOO.widget.Panel(#{element.to_json}, #{options.to_json});]
       js << %Q[panel.render();]
     end
